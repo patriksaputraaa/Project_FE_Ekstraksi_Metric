@@ -1,0 +1,9 @@
+28	NOI_project
+29	NOM_project
+30	NOMNAMM_project
+31	NOC_type
+32	WMC_type
+33	LCOM5_type
+34	WMCNAMM_type
+35	AMW_type
+36	NOCS_package
