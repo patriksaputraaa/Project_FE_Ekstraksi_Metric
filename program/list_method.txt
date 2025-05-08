@@ -1,8 +1,8 @@
 28	NOI_project done
 29	NOM_project done
 30	NOMNAMM_project done
-31	NOC_type done
-32	WMC_type done
+31	NOC_type done NEW
+32	WMC_type done NEW
 33	LCOM5_type 
 34	WMCNAMM_type
 35	AMW_type
