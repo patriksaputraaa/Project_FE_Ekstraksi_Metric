@@ -1,9 +1,9 @@
 28	NOI_project done
 29	NOM_project done
 30	NOMNAMM_project done
-31	NOC_type ERROR
-32	WMC_type
-33	LCOM5_type
+31	NOC_type done
+32	WMC_type done
+33	LCOM5_type 
 34	WMCNAMM_type
 35	AMW_type
 36	NOCS_package
