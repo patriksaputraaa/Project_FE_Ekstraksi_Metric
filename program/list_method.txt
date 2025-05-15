@@ -1,9 +1,11 @@
 28	NOI_project done
 29	NOM_project done
 30	NOMNAMM_project done
-31	NOC_type done NEW
-32	WMC_type done NEW
-33	LCOM5_type 
-34	WMCNAMM_type
-35	AMW_type
-36	NOCS_package
+31	NOC_type done rev? mintol cek lagi bang 
+32	WMC_type done
+33	LCOM5_type NEW
+34	WMCNAMM_type NEW
+35	AMW_type NEW
+36	NOCS_package NEW
+
+type = class
