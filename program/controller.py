@@ -181,63 +181,6 @@ def calculate_wmc_for_class(class_declaration):
             
     return wmc_value
 
-# Function to calculate LCOM5 (Lack of Cohesion in Methods)
-def calculate_lcom5(class_declaration):
-    if class_declaration.body is None:
-        return 0
-    
-    # Identifikasi metode dan atribut
-    methods = []
-    attributes = set()
-    
-    # Kumpulkan semua metode dan atribut kelas
-    for member in class_declaration.body.members:
-        if isinstance(member, node.FunctionDeclaration):
-            methods.append(member)
-        elif isinstance(member, node.PropertyDeclaration) or isinstance(member, node.VariableDeclaration):
-            # Tambahkan atribut kelas (properti atau variabel)
-            if hasattr(member, 'name'):
-                attributes.add(member.name)
-    
-    method_count = len(methods)
-    attribute_count = len(attributes)
-    
-    # Jika tidak ada metode atau hanya ada satu metode, atau tidak ada atribut, LCOM5 = 0
-    if method_count <= 1 or attribute_count == 0:
-        return 0
-    
-    # Buat matrix metode-atribut
-    method_attribute_usage = {}
-    for method in methods:
-        method_name = method.name
-        method_attribute_usage[method_name] = set()
-        if hasattr(method, 'body') and method.body:
-            method_body = str(method.body)
-            for attr in attributes:
-                # Periksa apakah atribut digunakan dalam metode
-                # Untuk Kotlin kita cek pola this.attr atau langsung attr
-                if f"this.{attr}" in method_body or f" {attr} " in method_body or f".{attr}" in method_body:
-                    method_attribute_usage[method_name].add(attr)
-    
-    # Hitung jumlah metode yang mengakses setiap atribut
-    attribute_method_count = {attr: 0 for attr in attributes}
-    for method_name, used_attrs in method_attribute_usage.items():
-        for attr in used_attrs:
-            attribute_method_count[attr] += 1
-    
-    # Hitung sum(μ(A))
-    sum_attribute_usage = sum(attribute_method_count.values())
-    
-    # Hitung LCOM5
-    try:
-        lcom5 = (method_count - (sum_attribute_usage / attribute_count)) / (method_count - 1)
-        # LCOM5 harus dalam rentang [0,1]
-        return max(0, min(1, lcom5))
-    except ZeroDivisionError:
-        return 0
-    except Exception:
-        return 0
-
 def calculate_wmcnamm_type(class_declaration):
     """
     Calculate WMCNAMM_type (Weighted Methods per Class for Non-Accessor/Mutator Methods)
@@ -372,6 +315,71 @@ def count_nocs_package(directory):
             continue
     
     return package_class_counts
+
+def calculate_lcom5(class_declaration):
+    """
+    Calculate LCOM5 (Lack of Cohesion in Methods) 
+    Uses a simplified approach based on method body similarity
+    """
+    if class_declaration.body is None:
+        return 0
+    
+    # Collect all methods with bodies
+    methods = []
+    for member in class_declaration.body.members:
+        if isinstance(member, node.FunctionDeclaration) and member.body is not None:
+            methods.append(member)
+    
+    # Need at least 2 methods for LCOM5 calculation
+    if len(methods) < 2:
+        return 0
+    
+    # Calculate method pairs and their similarity
+    total_pairs = 0
+    cohesive_pairs = 0
+    
+    for i in range(len(methods)):
+        for j in range(i + 1, len(methods)):
+            total_pairs += 1
+            
+            # Get method bodies as strings (same way as your other metrics)
+            body1 = str(methods[i].body) if methods[i].body else ""
+            body2 = str(methods[j].body) if methods[j].body else ""
+            
+            if body1 and body2:
+                # Split into tokens and find common meaningful tokens
+                tokens1 = set(body1.split())
+                tokens2 = set(body2.split())
+                
+                # Remove common programming constructs
+                common_keywords = {
+                    'if', 'else', 'for', 'while', 'return', 'var', 'val', 'fun', 
+                    'this', 'null', 'true', 'false', 'it', 'when', 'is', 'as',
+                    '{', '}', '(', ')', '[', ']', ';', ',', '.', '=', '+', '-', 
+                    '*', '/', '&&', '||', '!', '<', '>', '<=', '>=', '==', '!=',
+                    'private', 'public', 'protected', 'internal', 'override'
+                }
+                
+                # Filter out keywords and short tokens
+                meaningful_tokens1 = {token for token in tokens1 
+                                    if token not in common_keywords and len(token) > 2}
+                meaningful_tokens2 = {token for token in tokens2 
+                                    if token not in common_keywords and len(token) > 2}
+                
+                # Check if methods share meaningful tokens (indicating shared attributes/functionality)
+                shared_tokens = meaningful_tokens1 & meaningful_tokens2
+                if len(shared_tokens) > 0:
+                    cohesive_pairs += 1
+    
+    if total_pairs == 0:
+        return 0
+    
+    # LCOM5 = 1 - (cohesive pairs / total pairs)
+    # Higher values indicate lower cohesion
+    lcom5 = 1 - (cohesive_pairs / total_pairs)
+    
+    # Ensure result is between 0 and 1
+    return max(0.0, min(1.0, lcom5))
 
 def extracted_method(file_path, noi_count, nom_count, nomnamm_count, nocs_package_counts):
     try:
